@@ -176,7 +176,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     changeToUAH() {
       this.price = this.price * this.transfer;
-      console.log(this.classes);
     }
 
     render() {
@@ -240,4 +239,52 @@ window.addEventListener("DOMContentLoaded", () => {
       ".menu .container"
     ).render();
   });
+
+  // Forms
+
+  const forms = document.querySelectorAll("form");
+
+  const message = {
+    loading: "Загрузка",
+    success: "Спасибо! Скоро мы с вами свяжемся",
+    failure: "Что-то пошло не так...",
+  };
+
+  forms.forEach((item) => {
+    postData(item);
+  });
+
+  function postData(form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const statusMessage = document.createElement("div");
+      statusMessage.classList.add("status");
+      statusMessage.textContent = message.loading;
+      form.append(statusMessage);
+
+      const request = new XMLHttpRequest();
+      request.open("POST", "http://localhost:5000/api/router/test");
+      request.setRequestHeader("Content-Type", "application/json");
+      const formData = new FormData(form);
+      const object = {};
+      formData.forEach((value, key) => {
+        object[key] = value;
+      });
+
+      request.send(JSON.stringify(object));
+      request.addEventListener("load", () => {
+        if (request.status === 200) {
+          console.log(request.response);
+          statusMessage.textContent = message.success;
+          form.reset();
+          setTimeout(() => {
+            statusMessage.remove();
+          }, 2000);
+        } else {
+          statusMessage.textContent = message.failure;
+        }
+      });
+    });
+  }
 });
