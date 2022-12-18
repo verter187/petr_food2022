@@ -57,6 +57,14 @@ a {
   font-weight: 400;
 }
 
+.show {
+  display: block;
+}
+
+.hide {
+  display: none;
+}
+
 .fade {
   animation-name: fade;
   animation-duration: 1.5s;
@@ -66,19 +74,10 @@ a {
   from {
     opacity: 0.1;
   }
+  to {
+    opacity: 1;
+  }
 }
-to {
-  opacity: 1;
-}
-
-.hide {
-  display: none;
-}
-
-.show {
-  display: block;
-}
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -117,7 +116,7 @@ to {
   bottom: -1px;
   z-index: -1;
   height: 8px;
-  background: #54ED39;
+  background: #54ed39;
 }
 .header__link:last-child {
   margin-right: 0;
@@ -370,7 +369,7 @@ to {
   width: 170px;
   height: 50px;
   padding: 0 10px;
-  background: #FFFFFF;
+  background: #ffffff;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
   border: none;
   text-align: center;
@@ -381,7 +380,7 @@ to {
 }
 .calculating__choose-item_active {
   color: #fff;
-  background-color: #54ED39;
+  background-color: #54ed39;
 }
 .calculating__choose_medium {
   width: 743px;
@@ -437,7 +436,7 @@ to {
 .menu__item {
   width: 320px;
   min-height: 450px;
-  background: #FFFFFF;
+  background: #ffffff;
   box-shadow: 0px 4px 25px rgba(0, 0, 0, 0.25);
   font-size: 16px;
   font-weight: 300;
@@ -493,7 +492,7 @@ to {
 .order__input {
   width: 280px;
   height: 50px;
-  background: #FFFFFF;
+  background: #ffffff;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
   border: none;
   font-size: 18px;
@@ -547,7 +546,7 @@ to {
 .promotion__timer .timer__block {
   width: 102px;
   height: 120px;
-  background: #FFFFFF;
+  background: #ffffff;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.25);
   font-size: 16px;
   font-weight: 300;
@@ -632,7 +631,7 @@ to {
   margin: 20px auto 20px auto;
   width: 280px;
   height: 50px;
-  background: #FFFFFF;
+  background: #ffffff;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
   border: none;
   font-size: 18px;
