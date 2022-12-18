@@ -102,31 +102,24 @@ window.addEventListener("DOMContentLoaded", () => {
   setClock(".timer", deadLine);
 
   //modal window
-
   const modalTrigger = document.querySelectorAll("[data-modal]"),
-    modal = document.querySelector(".modal"),
-    modalCloseBtn = document.querySelectorAll("[data-close]");
+    modal = document.querySelector(".modal");
 
-  const toggleModal = (overflow = "") => {
-    modal.classList.toggle("hide");
+  const toggleModal = (elem, overflow = "") => {
+    elem.classList.toggle("hide");
     document.body.style.overflow = overflow;
     clearInterval(modalTimerId);
   };
 
   modalTrigger.forEach((btn) => {
     btn.addEventListener("click", () => {
-      toggleModal("hide");
-    });
-  });
-  modalCloseBtn.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      toggleModal();
+      toggleModal(modal, "hide");
     });
   });
 
   modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      toggleModal();
+    if (e.target === modal || e.target.getAttribute("data-close") === "") {
+      toggleModal(modal);
     }
   });
 
@@ -137,7 +130,7 @@ window.addEventListener("DOMContentLoaded", () => {
         (e.key == "Escape" || e.key == "Esc" || e.keyCode == 27) &&
         !modal.classList.contains("hide")
       ) {
-        toggleModal();
+        toggleModal(modal);
       }
     },
     true
@@ -148,16 +141,15 @@ window.addEventListener("DOMContentLoaded", () => {
       window.pageYOffset + document.documentElement.clientHeight >=
       document.documentElement.scrollHeight
     ) {
-      toggleModal("hide");
+      toggleModal(modal, "hide");
       window.removeEventListener("scroll", showModalByScroll);
     }
   };
   window.addEventListener("scroll", showModalByScroll);
 
-  const modalTimerId = setTimeout(() => toggleModal("hide"), 5000);
+  const modalTimerId = setTimeout(() => toggleModal(modal, "hide"), 5000);
 
   //menu card
-
   class MenuCard {
     constructor(
       { path, alt, title, descr, price },
@@ -241,7 +233,6 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   // Forms
-
   const forms = document.querySelectorAll("form");
 
   const message = {
@@ -276,15 +267,35 @@ window.addEventListener("DOMContentLoaded", () => {
       request.addEventListener("load", () => {
         if (request.status === 200) {
           console.log(request.response);
-          statusMessage.textContent = message.success;
+          showThanksModal(message.success);
+
           form.reset();
           setTimeout(() => {
             statusMessage.remove();
           }, 2000);
         } else {
-          statusMessage.textContent = message.failure;
+          showThanksModal(message.failure);
         }
       });
     });
+  }
+
+  function showThanksModal(message) {
+    const prevModalDialog = document.querySelector(".modal__dialog");
+    toggleModal(prevModalDialog, "hide");
+
+    const thanksModal = document.createElement("div");
+    thanksModal.classList.add("modal__dialog");
+    thanksModal.innerHTML = `      
+      <div class="modal__content">         
+          <div data-close class="modal__close">&times;</div>
+          <div class="modal__title">${message}</div>
+      </div> `;
+    document.querySelector(".modal").append(thanksModal);
+    setTimeout(() => {
+      thanksModal.remove();
+      toggleModal(prevModalDialog);
+      toggleModal(modal);
+    }, 4000);
   }
 });
