@@ -1,6 +1,7 @@
 window.addEventListener("DOMContentLoaded", function () {
   // Tabs
 
+  const ROUTER_PATH = "http://localhost:5000/api/router/";
   let tabs = document.querySelectorAll(".tabheader__item"),
     tabsContent = document.querySelectorAll(".tabcontent"),
     tabsParent = document.querySelector(".tabheader__items");
@@ -39,7 +40,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
   // Timer
 
-  const deadline = "2022-06-11";
+  const deadline = "2023-01-01";
 
   function getTimeRemaining(endtime) {
     const t = Date.parse(endtime) - Date.parse(new Date()),
@@ -182,33 +183,6 @@ window.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  new MenuCard(
-    "img/tabs/vegy.jpg",
-    "vegy",
-    'Меню "Фитнес"',
-    'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-    9,
-    ".menu .container"
-  ).render();
-
-  new MenuCard(
-    "img/tabs/post.jpg",
-    "post",
-    'Меню "Постное"',
-    "Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.",
-    14,
-    ".menu .container"
-  ).render();
-
-  new MenuCard(
-    "img/tabs/elite.jpg",
-    "elite",
-    "Меню “Премиум”",
-    "В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!",
-    21,
-    ".menu .container"
-  ).render();
-
   // Forms
 
   const forms = document.querySelectorAll("form");
@@ -219,10 +193,64 @@ window.addEventListener("DOMContentLoaded", function () {
   };
 
   forms.forEach((item) => {
-    postData(item);
+    bindPostData(item);
   });
 
-  function postData(form) {
+  const getResource = async (url) => {
+    let res = await fetch(url);
+
+    if (res.status == 200) {
+      return await res.json();
+    }
+    throw new HttpError(res);
+  };
+
+  class HttpError extends Error {
+    constructor(response) {
+      super(`${response.status} for ${response.url}`);
+      this.name = "HttpError";
+      this.response = response;
+    }
+  }
+
+  function createMenus() {
+    return getResource(`${ROUTER_PATH}/menus`)
+      .then((data) => {
+        data.map(({ img, alt, title, descr, price }) =>
+          new MenuCard(
+            img,
+            alt,
+            title,
+            descr,
+            price,
+            ".menu .container"
+          ).render()
+        );
+      })
+      .catch((err) => {
+        if (err instanceof HttpError && err.response.status == 404) {
+          alert("Результат отсутствует на сервере.");
+        } else {
+          throw err;
+        }
+      });
+  }
+  createMenus();
+
+  const postData = async (url, data) => {
+    let res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-type": "application/json" },
+      body: data,
+    });
+
+    if (res.status == 200) {
+      return await res.json();
+    }
+    throw new HttpError(res);
+  };
+
+  function bindPostData(form) {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
@@ -235,31 +263,19 @@ window.addEventListener("DOMContentLoaded", function () {
       form.insertAdjacentElement("afterend", statusMessage);
 
       const formData = new FormData(form);
+      const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-      const object = {};
-      formData.forEach(function (value, key) {
-        object[key] = value;
-      });
-
-      fetch("http://localhost:5000/api/router/ping", {
-        method: "POST",
-        body: JSON.stringify(object),
-        headers: { "Content-type": "application/json; charset=utf-8" },
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            showThanksModal(message.success);
-            statusMessage.remove();
-            form.reset();
-            return response.json();
-          } else {
-            throw response.status;
-          }
-        })
+      postData(`${ROUTER_PATH}/client`, json)
         .then((data) => {
-          console.log(data);
+          showThanksModal(message.success);
+          statusMessage.remove();
         })
-        .catch(() => showThanksModal(message.failure));
+        .catch(() => {
+          showThanksModal(message.failure);
+        })
+        .finally(() => {
+          form.reset();
+        });
     });
   }
 
@@ -286,7 +302,60 @@ window.addEventListener("DOMContentLoaded", function () {
     }, 4000);
   }
 
-  fetch("http://localhost:5000/api/router/menus")
-    .then((data) => data.json())
-    .then((res) => console.log(res));
+  // Sliders
+
+  const qs = document.querySelector.bind(document),
+    prev = qs(".offer__slider-prev"),
+    next = qs(".offer__slider-next"),
+    parent = qs(".offer__slider-wrapper"),
+    total = qs("#total"),
+    current = qs("#current"),
+    setZero = (num) => (num < 10 ? `0${num}` : num),
+    setCurrent = (idx, value) => (value.textContent = setZero(idx + 1));
+
+  let slideIndex = 0;
+  setCurrent(slideIndex, current);
+
+  const changeSlide = (slideIndex, slides, clss = "hide") => {
+    slides.forEach((item, i) => {
+      i === slideIndex ? item.classList.remove(clss) : item.classList.add(clss);
+    });
+  };
+
+  setSlide = (next) => {
+    if (next) {
+      slideIndex = slideIndex < parent.children.length - 1 ? slideIndex + 1 : 0;
+    } else {
+      slideIndex = slideIndex > 0 ? slideIndex - 1 : parent.children.length - 1;
+    }
+    setCurrent(slideIndex, current);
+    changeSlide(slideIndex, [...parent.children]);
+  };
+
+  prev.addEventListener("click", () => setSlide());
+  next.addEventListener("click", () => setSlide(true));
+
+  const createSlideElement = (img, altimg, parent, clss = "offer__slide") => {
+    const element = document.createElement("div");
+    element.classList.add(clss);
+    element.innerHTML = `<img src="${img}" alt="${altimg}" />`;
+    parent.append(element);
+  };
+
+  getResource(`${ROUTER_PATH}/slides`)
+    .then((data) => {
+      data.map(({ img, altimg }) => {
+        createSlideElement(img, altimg, parent);
+      });
+      slidesElem = [...parent.children];
+      total.textContent = setZero(slidesElem.length);
+      changeSlide(slideIndex, slidesElem);
+    })
+    .catch((err) => {
+      if (err instanceof HttpError && err.response.status == 404) {
+        alert("Результат отсутствует на сервере.");
+      } else {
+        throw err;
+      }
+    });
 });
