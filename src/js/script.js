@@ -307,33 +307,49 @@ window.addEventListener("DOMContentLoaded", function () {
   const qs = document.querySelector.bind(document),
     prev = qs(".offer__slider-prev"),
     next = qs(".offer__slider-next"),
-    parent = qs(".offer__slider-wrapper"),
+    slidesWrapper = qs(".offer__slider-wrapper"),
     total = qs("#total"),
     current = qs("#current"),
     setZero = (num) => (num < 10 ? `0${num}` : num),
     setCurrent = (idx, value) => (value.textContent = setZero(idx + 1));
 
-  let slideIndex = 0;
+  const slidesField = document.createElement("div");
+  slidesField.classList.add("offer__slider-inner");
+  slidesWrapper.append(slidesField);
+
+  let slideIndex = 0,
+    offset = 0;
   setCurrent(slideIndex, current);
 
-  const changeSlide = (slideIndex, slides, clss = "hide") => {
+  const changeSlide = (slideIndex, slides, clss = "hide", width = 0) => {
     slides.forEach((item, i) => {
-      i === slideIndex ? item.classList.remove(clss) : item.classList.add(clss);
+      if (width) {
+        item.style.width = width;
+      }
     });
   };
 
-  setSlide = (next) => {
+  setSlide = (parent, next = false) => {
     if (next) {
+      offset =
+        offset === parseInt(width) * (parent.children.length - 1)
+          ? 0
+          : (offset += parseInt(width));
       slideIndex = slideIndex < parent.children.length - 1 ? slideIndex + 1 : 0;
     } else {
+      offset =
+        offset === 0
+          ? parseInt(width) * (parent.children.length - 1)
+          : (offset -= parseInt(width));
       slideIndex = slideIndex > 0 ? slideIndex - 1 : parent.children.length - 1;
     }
+
+    slidesField.style.transform = `translateX(-${offset}px)`;
     setCurrent(slideIndex, current);
-    changeSlide(slideIndex, [...parent.children]);
   };
 
-  prev.addEventListener("click", () => setSlide());
-  next.addEventListener("click", () => setSlide(true));
+  prev.addEventListener("click", () => setSlide(slidesField));
+  next.addEventListener("click", () => setSlide(slidesField, true));
 
   const createSlideElement = (img, altimg, parent, clss = "offer__slide") => {
     const element = document.createElement("div");
@@ -345,11 +361,16 @@ window.addEventListener("DOMContentLoaded", function () {
   getResource(`${ROUTER_PATH}/slides`)
     .then((data) => {
       data.map(({ img, altimg }) => {
-        createSlideElement(img, altimg, parent);
+        createSlideElement(img, altimg, slidesField);
       });
-      slidesElem = [...parent.children];
+      slidesElem = [...slidesField.children];
       total.textContent = setZero(slidesElem.length);
-      changeSlide(slideIndex, slidesElem);
+      slidesField.style.width = 100 * slidesElem.length + "%";
+      slidesField.style.display = "flex";
+      slidesField.style.transition = "0.5s all";
+      width = window.getComputedStyle(slidesWrapper).width;
+      changeSlide(slideIndex, slidesElem, "", width);
+      slidesWrapper.style.overflow = "hidden";
     })
     .catch((err) => {
       if (err instanceof HttpError && err.response.status == 404) {
