@@ -1,3 +1,5 @@
+"use strict";
+
 window.addEventListener("DOMContentLoaded", function () {
   // Tabs
 
@@ -305,6 +307,7 @@ window.addEventListener("DOMContentLoaded", function () {
   // Sliders
 
   const qs = document.querySelector.bind(document),
+    slider = document.querySelector(".offer__slider"),
     prev = qs(".offer__slider-prev"),
     next = qs(".offer__slider-next"),
     slidesWrapper = qs(".offer__slider-wrapper"),
@@ -328,26 +331,46 @@ window.addEventListener("DOMContentLoaded", function () {
       }
     });
   };
+  slider.style.position = "relative";
+  const indicators = document.createElement("ol");
+  indicators.classList.add("carousel-indicators");
+  slider.append(indicators);
 
-  setSlide = (parent, next = false) => {
+  const getOffset = (parent, next) => {
     if (next) {
-      offset =
-        offset === parseInt(width) * (parent.children.length - 1)
-          ? 0
-          : (offset += parseInt(width));
-      slideIndex = slideIndex < parent.children.length - 1 ? slideIndex + 1 : 0;
+      return offset === parseInt(width) * (parent.children.length - 1)
+        ? 0
+        : (offset += parseInt(width));
     } else {
-      offset =
-        offset === 0
-          ? parseInt(width) * (parent.children.length - 1)
-          : (offset -= parseInt(width));
-      slideIndex = slideIndex > 0 ? slideIndex - 1 : parent.children.length - 1;
+      return offset === 0
+        ? parseInt(width) * (parent.children.length - 1)
+        : (offset -= parseInt(width));
     }
+  };
+
+  const getSlideIndex = (parent, slideIndex, next) => {
+    if (next) {
+      return slideIndex < parent.children.length - 1 ? slideIndex + 1 : 0;
+    } else {
+      return slideIndex > 0 ? slideIndex - 1 : parent.children.length - 1;
+    }
+  };
+
+  const setSlide = (parent, next = false, curSlideIndex = null) => {
+    offset =
+      curSlideIndex === null
+        ? getOffset(parent, next)
+        : parseInt(width) * curSlideIndex;
+
+    slideIndex =
+      curSlideIndex === null
+        ? getSlideIndex(parent, slideIndex, next)
+        : curSlideIndex;
 
     slidesField.style.transform = `translateX(-${offset}px)`;
     setCurrent(slideIndex, current);
   };
-
+  const width = window.getComputedStyle(slidesWrapper).width;
   prev.addEventListener("click", () => setSlide(slidesField));
   next.addEventListener("click", () => setSlide(slidesField, true));
 
@@ -363,14 +386,33 @@ window.addEventListener("DOMContentLoaded", function () {
       data.map(({ img, altimg }) => {
         createSlideElement(img, altimg, slidesField);
       });
-      slidesElem = [...slidesField.children];
+      const slidesElem = [...slidesField.children];
       total.textContent = setZero(slidesElem.length);
       slidesField.style.width = 100 * slidesElem.length + "%";
       slidesField.style.display = "flex";
       slidesField.style.transition = "0.5s all";
-      width = window.getComputedStyle(slidesWrapper).width;
+
       changeSlide(slideIndex, slidesElem, "", width);
       slidesWrapper.style.overflow = "hidden";
+      slidesElem.forEach((slide, i) => {
+        const dot = document.createElement("li");
+        dot.setAttribute("data-slide-to", i + 1);
+        dot.classList.add("dot");
+        dot.addEventListener("click", () => {
+          setSlide(slidesField, false, i);
+
+          [...indicators.children].forEach((item, x) => {
+            console.log(item, i);
+            if (x === i) {
+              item.style.opacity = 1;
+            } else {
+              item.style.opacity = 0.5;
+            }
+          });
+        });
+        if (i === 0) dot.style.opacity = 1;
+        indicators.append(dot);
+      });
     })
     .catch((err) => {
       if (err instanceof HttpError && err.response.status == 404) {
