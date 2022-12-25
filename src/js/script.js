@@ -307,7 +307,7 @@ window.addEventListener("DOMContentLoaded", function () {
   // Sliders
 
   const qs = document.querySelector.bind(document),
-    slider = document.querySelector(".offer__slider"),
+    slider = qs(".offer__slider"),
     prev = qs(".offer__slider-prev"),
     next = qs(".offer__slider-next"),
     slidesWrapper = qs(".offer__slider-wrapper"),
@@ -421,4 +421,57 @@ window.addEventListener("DOMContentLoaded", function () {
         throw err;
       }
     });
+
+  // calc
+
+  const calculateDailyNormColors = (event) => {
+    const calcElemClass = "calculating__choose-item",
+      calcElemClassActive = `${calcElemClass}_active`;
+    if (event.target.classList.contains(calcElemClass)) {
+      const elem = event.target,
+        parent = elem.parentElement;
+
+      if (parent && elem.tagName === "DIV") {
+        [...parent.children].forEach((item) =>
+          item.classList.remove(calcElemClassActive)
+        );
+        elem.classList.add(calcElemClassActive);
+      }
+    }
+
+    const gender = qs(`#gender .${calcElemClassActive}`),
+      height = qs("#height"),
+      weight = qs("#weight"),
+      age = qs("#age"),
+      activity = qs(`.calculating__choose_big .${calcElemClassActive}`),
+      result = qs(".calculating__result");
+    let bmr, dailyCalorie;
+
+    const activityLevel = {
+      low: 1.2,
+      small: 1.375,
+      medium: 1.55,
+      high: 1.725,
+    };
+
+    dailyCalorie = 0;
+    if (weight.value > 0 && height.value > 0 && age.value > 0) {
+      console.log(777, weight.value && height.value && age.value, age.value);
+      if (gender.textContent.trim() === "Мужчина") {
+        bmr =
+          88.36 + 13.4 * +weight.value + 4.8 * +height.value - 5.7 * +age.value;
+      } else {
+        bmr =
+          447.6 + 9.2 * +weight.value + 3.1 * +height.value - 4.3 * +age.value;
+      }
+      dailyCalorie = Math.floor(bmr * +activityLevel[activity.id]);
+    } else {
+      dailyCalorie = 0;
+    }
+    result.innerHTML = `<span>${dailyCalorie}</span> ккал`;
+  };
+
+  const container = qs(".calculating__field");
+
+  container.addEventListener("click", calculateDailyNormColors);
 });
